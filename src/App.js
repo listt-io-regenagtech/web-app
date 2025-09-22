@@ -17,6 +17,10 @@ function App() {
     const authStatus = localStorage.getItem('isAuthenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
+      console.log("Authenticated user");
+    } else {
+      console.log("Non-authenticated user");
+      navigate('/'); // Redirect to login if not authenticated  
     }
   }, []);
 
@@ -33,6 +37,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex' }}>
+      <div></div>
       {/* Sidebar */}
       {isAuthenticated && (
         <aside style={{ width: '200px', background: '#f8f8f8', padding: '1rem' }}>

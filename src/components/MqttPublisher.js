@@ -34,13 +34,19 @@ const WheelStatusCard = ({ wheelName, statusTopic, batteryTopic, actuatorTopic }
   const [status, setStatus] = useState("Disconnected");
   const [battery, setBattery] = useState(0);
   const [actuatorPosition, setActuatorPosition] = useState(0);
+  const [temp, setTemp] = useState(0);
+  const [hum, setHum] = useState(0);
+  const [pres, setPres] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   useEffect(() => {
     const client = mqtt.connect(brokerUrl, { username, password });
+    console.log("Connecting to MQTT broker...");
 
     client.on("connect", () => {
-      client.subscribe([statusTopic, batteryTopic, actuatorTopic]);
+      console.log('Connected to MQTT broker anonymously');
+      client.subscribe('env/bme280');
+      client.subscribe([statusTopic, batteryTopic, actuatorTopic, 'env/bme280', 'gps/location']);
     });
 
     client.on("message", (topic, message) => {
@@ -48,11 +54,31 @@ const WheelStatusCard = ({ wheelName, statusTopic, batteryTopic, actuatorTopic }
       if (topic === statusTopic) setStatus(payload);
       if (topic === batteryTopic) setBattery(parseFloat(payload));
       if (topic === actuatorTopic) setActuatorPosition(parseFloat(payload));
+      if (topic === 'env/bme280') {
+        try {
+          const envData = JSON.parse(payload);
+          setTemp(envData.temperature || 0);
+          setHum(envData.humidity || 0);
+          setPres(envData.pressure || 0);
+        } catch (err) {
+          console.error("Error parsing BME280 data:", err);
+        }
+        // console.log(`BME280 Data - Temp: ${temp}°C, Hum: ${hum}%, Pres: ${pres} hPa`);
+      }
+      if (topic === 'gps/location') {
+        try {
+          const gpsData = JSON.parse(payload);
+          console.log(`GPS Data - Lat: ${gpsData.lat}, Lng: ${gpsData.lng}`);
+        } catch (err) {
+          console.error("Error parsing GPS data:", err);
+        }
+      } 
       setLastUpdate(Date.now());
     });
 
     return () => client.end();
   }, [statusTopic, batteryTopic, actuatorTopic]);
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
