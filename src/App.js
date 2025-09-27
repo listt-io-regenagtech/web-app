@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'; // Import useNavigate here
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Layout } from 'antd';
 import HomePage from './pages/HomePage';
 import ControlPage from './pages/ControlPage';
 import MissionPage from './pages/MissionPage';
 import ScheduleMissionPage from './pages/ScheduleMissionPage';
 import ReportPage from './pages/ReportPage';
-import LoginPage from './pages/LoginPage'; // Import LoginPage component
-import './App.css'; // You can add your styles here
+import LoginPage from './pages/LoginPage';
+import NavigationBar from './components/NavigationBar';
+import './App.css';
+
+const { Content } = Layout;
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,11 +22,15 @@ function App() {
     if (authStatus === 'true') {
       setIsAuthenticated(true);
       console.log("Authenticated user");
+      // Redirect to home if on root path
+      if (window.location.pathname === '/') {
+        navigate('/home');
+      }
     } else {
       console.log("Non-authenticated user");
       navigate('/'); // Redirect to login if not authenticated  
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -35,56 +43,26 @@ function App() {
     localStorage.setItem('isAuthenticated', 'true');
   };
 
-  return (
-    <div style={{ display: 'flex' }}>
-      <div></div>
-      {/* Sidebar */}
-      {isAuthenticated && (
-        <aside style={{ width: '200px', background: '#f8f8f8', padding: '1rem' }}>
-          <nav>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              <li style={{ marginBottom: '1rem' }}>
-                <Link to="/home">Home</Link>
-              </li>
-              <li style={{ marginBottom: '1rem' }}>
-                <Link to="/control">Control</Link>
-              </li>
-              <li style={{ marginBottom: '1rem' }}>
-                <Link to="/mission-setup">Mission Setup</Link>
-              </li>
-              <li style={{ marginBottom: '1rem' }}>
-                <Link to="/schedule-mission">Schedule Mision</Link>
-              </li>
-              <li style={{ marginBottom: '1rem' }}>
-                <Link to="/report">Report</Link>
-              </li>
-              <li style={{ marginBottom: '1rem' }}>
-                <button onClick={handleLogout}>Logout</button>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-      )}
+  if (!isAuthenticated) {
+    return <LoginPage setIsAuthenticated={handleLogin} />;
+  }
 
-      {/* Main Content */}
-      <main style={{ flexGrow: 1, padding: '1rem' }}>
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <NavigationBar onLogout={handleLogout} />
+      
+      <Content>
         <Routes>
-          {!isAuthenticated ? (
-            <Route path="/" element={<LoginPage setIsAuthenticated={handleLogin} />} />
-          ) : (
-            <>
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/control" element={<ControlPage />} />
-              <Route path="/mission-setup" element={<MissionPage />} />
-              <Route path="/schedule-mission" element={<ScheduleMissionPage />} />
-              <Route path="/report" element={<ReportPage />} />
-            </>
-          )}
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/control" element={<ControlPage />} />
+          <Route path="/mission-setup" element={<MissionPage />} />
+          <Route path="/schedule-mission" element={<ScheduleMissionPage />} />
+          <Route path="/report" element={<ReportPage />} />
+          <Route path="/" element={<HomePage />} />
         </Routes>
-      </main>
-    </div>
+      </Content>
+    </Layout>
   );
 }
 
 export default App;
-
